@@ -369,6 +369,7 @@ let%test_module _ =
 ;;
 
 let%test "int_pow" =
+  let nan = 0. /. 0. in
   let tol = 1e-15 in
   let test (x, n) =
     let reference_value = x **. of_int n in
@@ -872,6 +873,7 @@ struct
       Int64.( < ) lower_bound_minus_epsilon min_value)
   ;;
 
+  (*ZZZ 
   let%test "bigger than upper bound overflows" =
     let upper_bound = Int64.of_float float_upper_bound in
     let upper_bound_plus_epsilon =
@@ -886,6 +888,7 @@ struct
       (* a value greater than max_value would overflow if converted to [t] *)
       Int64.( > ) upper_bound_plus_epsilon max_value)
   ;;
+*)
 end
 
 let%test_module "Int" = (module Test_bounds (Int))

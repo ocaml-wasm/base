@@ -8,4 +8,7 @@
  (preprocess no_preprocessing)
  (js_of_ocaml
   (javascript_files runtime.js))
+ (wasm_of_ocaml
+  (javascript_files runtime.js)
+  (wasm_files runtime.wat))
  (install_c_headers internalhash))

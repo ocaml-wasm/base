@@ -28,17 +28,9 @@ let oc, mode =
   | _ -> failwith "bad command line arguments"
 ;;
 
-module Big_int = struct
-  include Big_int
-
-  let ( > ) = gt_big_int
-  let ( <= ) = le_big_int
-  let ( ^ ) = power_big_int_positive_int
-  let ( - ) = sub_big_int
-  let ( + ) = add_big_int
-  let one = unit_big_int
-  let sqrt = sqrt_big_int
-  let to_string = string_of_big_int
+module Bigint = struct
+  include Bigint
+  let sqrt x = of_zarith_bigint (Z.sqrt (to_zarith_bigint x))
 end
 
 module Array = StdLabels.Array
@@ -52,16 +44,16 @@ type generated_type =
 let max_big_int_for_bits bits =
   let shift = bits - 1 in
   (* sign bit *)
-  Big_int.(shift_left_big_int one shift - one)
+  Bigint.(shift_left one shift - one)
 ;;
 
 let safe_to_print_as_int =
   let int31_max = max_big_int_for_bits 31 in
-  fun x -> Big_int.(x <= int31_max)
+  fun x -> Bigint.(x <= int31_max)
 ;;
 
 let format_entry typ b =
-  let s = Big_int.to_string b in
+  let s = Bigint.to_string b in
   match typ with
   | Int ->
     if safe_to_print_as_int b then s else Printf.sprintf "Stdlib.Int64.to_int %sL" s
@@ -99,16 +91,16 @@ let generate_negative_bounds = function
 ;;
 
 let highest_base exponent max_val =
-  let open Big_int in
+  let open Bigint in
   match exponent with
   | 0 | 1 -> max_val
   | 2 -> sqrt max_val
   | _ ->
     let rec search possible_base =
-      if possible_base ^ exponent > max_val
+      if possible_base ** of_int exponent > max_val
       then (
         let res = possible_base - one in
-        assert (res ^ exponent <= max_val);
+        assert (res ** of_int exponent <= max_val);
         res)
       else search (possible_base + one)
     in
@@ -128,7 +120,7 @@ let gen_array ~typ ~bits ~sign ~indent =
   let bounds =
     match sign with
     | Pos -> pos_bounds
-    | Neg -> Array.map pos_bounds ~f:Big_int.minus_big_int
+    | Neg -> Array.map pos_bounds ~f:Bigint.(~-)
   in
   pr "[| %s" (format_entry typ bounds.(0));
   for i = 1 to Array.length bounds - 1 do
