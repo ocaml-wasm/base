@@ -1,2 +1,3 @@
-(library (name base_test_helpers) (libraries base)
+(library (name base_test_helpers) (public_name base_test_helpers)
+ (libraries base)
  (preprocess (pps ppx_jane)))

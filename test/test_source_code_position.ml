@@ -9,5 +9,5 @@ let%expect_test "[%here]" =
 let%expect_test "of_pos __POS__" =
   let here = Source_code_position.of_pos Stdlib.__POS__ in
   print_s [%sexp (here : Source_code_position.t)];
-  [%expect {| test_source_code_position.ml:10:41 |}]
+  [%expect {| lib/base/test/test_source_code_position.ml:10:41 |}]
 ;;
