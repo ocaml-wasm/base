@@ -1,2 +1,2 @@
-(executables (names generate_pow_overflow_bounds) (libraries num)
+(executables (names generate_pow_overflow_bounds) (libraries bignum)
  (preprocess no_preprocessing))
