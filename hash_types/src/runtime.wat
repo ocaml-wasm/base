@@ -6,8 +6,8 @@
       (func $caml_hash_mix_int (param i32) (param i32) (result i32)))
    (import "env" "caml_hash_mix_int64"
       (func $caml_hash_mix_int64 (param i32) (param i64) (result i32)))
-   (import "env" "caml_hash_mix_float"
-      (func $caml_hash_mix_float (param i32) (param f64) (result i32)))
+   (import "env" "caml_hash_mix_double"
+      (func $caml_hash_mix_double (param i32) (param f64) (result i32)))
    (import "env" "caml_hash_mix_string"
       (func $caml_hash_mix_string
          (param i32) (param (ref $string)) (result i32)))
@@ -33,7 +33,7 @@
    (func (export "Base_internalhash_fold_float")
       (param (ref eq)) (param (ref eq)) (result (ref eq))
       (ref.i31
-         (call $caml_hash_mix_float
+         (call $caml_hash_mix_double
             (i31.get_s (ref.cast (ref i31) (local.get 0)))
             (call $Double_val (local.get 1)))))
 
