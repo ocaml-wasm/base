@@ -40,8 +40,7 @@
 
    (func (export "Base_int_math_int_ctz")
       (param (ref eq)) (result (ref eq))
-      (ref.i31
-         (i32.ctz (i31.get_s (ref.cast (ref i31) (local.get 0))) (i32.const 1))))
+      (ref.i31 (i32.ctz (i31.get_s (ref.cast (ref i31) (local.get 0))))))
 
    (export "Base_int_math_nativeint_ctz" (func $Base_int_math_int32_ctz))
    (func $Base_int_math_int32_ctz (export "Base_int_math_int32_ctz")
@@ -108,7 +107,7 @@
          (ref.i31 (i32.const 1)) (ref.i31 (i32.const 1)) (ref.i31 (i32.const 0))
          (local.get $d)))
 
-   (global $Base_am_testing_flag (export "Base_am_testing_flag") (mut (i32))
+   (global $Base_am_testing_flag (export "Base_am_testing_flag") (mut i32)
       (i32.const 0))
 
    (func (export "Base_am_testing") (param (ref eq)) (result (ref eq))
