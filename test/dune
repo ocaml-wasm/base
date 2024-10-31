@@ -3,5 +3,5 @@
  core.base_for_tests base_test_helpers
   expect_test_helpers_core.expect_test_helpers_base sexplib sexp_grammar
   sexp_grammar_validation stdio uutf)
- (inline_tests (flags -drop-tag no-js -drop-tag 64-bits-only -drop-tag no-wasm) (modes js))
+ (inline_tests (flags -drop-tag no-js -drop-tag 64-bits-only -drop-tag no-wasm) (modes wasm))
  (preprocess (pps ppx_jane -dont-apply=pipebang -no-check-on-extensions)))
