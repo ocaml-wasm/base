@@ -1,6 +1,7 @@
 (library (name base_internalhash_types)
  (public_name base.base_internalhash_types) (libraries)
  (preprocess no_preprocessing)
- (js_of_ocaml (javascript_files runtime.js) (wasm_files runtime.wat))
+ (js_of_ocaml (javascript_files runtime.js))
+ (wasm_of_ocaml (javascript_files runtime.js) (wasm_files runtime.wat))
  (foreign_stubs (language c) (names internalhash_stubs))
  (install_c_headers internalhash))
