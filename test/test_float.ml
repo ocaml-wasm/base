@@ -370,6 +370,7 @@ let%test_module _ =
 ;;
 
 let%test "int_pow" =
+  let nan = 0. /. 0. in
   let tol = 1e-15 in
   let test (x, n) =
     let reference_value = x **. of_int n in
