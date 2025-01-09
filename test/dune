@@ -1,7 +1,8 @@
 (library
  (name base_test)
- (libraries base base_container_tests core.base_for_tests base_test_helpers
+ (libraries base core.base_for_tests base_test_helpers
    bignum.bigint expect_test_helpers_core.expect_test_helpers_base expectable
    sexp_grammar_validation sexplib stdio)
+ (inline_tests (flags -drop-tag no-js -drop-tag 64-bits-only -drop-tag no-wasm) (modes js wasm))
  (preprocess
   (pps ppx_jane -dont-apply=pipebang -no-check-on-extensions)))

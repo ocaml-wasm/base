@@ -12,7 +12,7 @@ let%expect_test "[value_exn]" =
      the default value of [here] in the external version of Base *)
   Expect_test_helpers_base.require_does_raise ~hide_positions:true (fun () ->
     value_exn None);
-  [%expect {| ("Option.value_exn None" lib/base/test/test_option.ml:LINE:COL) |}];
+  [%expect {| "Option.value_exn None" |}];
   Expect_test_helpers_base.require_does_raise (fun () ->
     value_exn None ~here:Lexing.dummy_pos);
   [%expect {| "Option.value_exn None" |}]

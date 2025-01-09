@@ -77,11 +77,6 @@ function caml_dummy_obj_is_stack(x) {
   throw new Error(`BUG: this function should be unreachable; please report to compiler or base devs.`);
 }
 
-//Provides: caml_dummy_obj_is_stack
-function caml_dummy_obj_is_stack(x) {
-  throw new Error(`BUG: this function should be unreachable; please report to compiler or base devs.`);
-}
-
 //Provides: Base_caml_modf_positive_float_unboxed_exn
 //Requires: caml_invalid_argument
 function Base_caml_modf_positive_float_unboxed_exn(a, b) {

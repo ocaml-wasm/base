@@ -6,6 +6,9 @@
  (public_name base.base_internalhash_types)
  (libraries)
  (preprocess no_preprocessing)
+ (wasm_of_ocaml
+  (wasm_files runtime.wat)
+  (javascript_files runtime.js))
  (js_of_ocaml
   (javascript_files runtime.js))
  (install_c_headers internalhash))

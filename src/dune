@@ -34,6 +34,9 @@
   (pps ppx_base ppx_base_internal ppx_base_lint -check-doc-comments
     -type-conv-keep-w32=both -apply=js_style,base_lint,deriving))
  (js_of_ocaml
+  (javascript_files runtime.js))
+ (wasm_of_ocaml
+  (wasm_files runtime.wat)
   (javascript_files runtime.js)))
 
 (rule
@@ -43,7 +46,7 @@
 
 (ocamllex hex_lexer)
 
-(documentation)
+(documentation (package base))
 
 (rule
  (targets ocamlopt-flags)
