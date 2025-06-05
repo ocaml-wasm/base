@@ -35,7 +35,7 @@
    (import "env" "caml_string_length"
       (func $caml_string_length (param (ref eq)) (result i32)))
    (import "env" "caml_blit_string"
-      (fun $caml_blit_string
+      (func $caml_blit_string
          (param $v1 (ref eq)) (param $vi1 (ref eq))
          (param $v2 (ref eq)) (param $vi2 (ref eq))
          (param $vn (ref eq)) (result (ref eq))))
