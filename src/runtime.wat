@@ -30,7 +30,18 @@
       (func $caml_string_cat
          (param (ref eq)) (param (ref eq)) (result (ref eq))))
 
-   (type $string (array (mut i8)))
+(@if use-js-string
+(@then
+   (import "env" "caml_string_length"
+      (func $caml_string_length (param (ref eq)) (result i32)))
+   (import "env" "caml_blit_string"
+      (param $v1 (ref eq)) (param $vi1 (ref eq))
+      (param $v2 (ref eq)) (param $vi2 (ref eq))
+      (param $vn (ref eq)) (result (ref eq)))
+))
+
+   (type $bytes (array (mut i8)))
+   (type $string (struct (field anyref)))
    (type $float (struct (field f64)))
    (type $block (array (mut (ref eq))))
 
@@ -153,15 +164,12 @@
 
    (export "caml_make_local_vect" (func $caml_make_vect))
 
-   (data $modulus_positive "float.ml: modulus should be positive")
-
    (func $modf_pos_u (param $a f64) (param $b f64) (result f64)
       (local $m f64)
       (if (f64.lt (local.get $b) (f64.const 0))
          (then
             (call $caml_invalid_argument
-               (array.new_data $string $modulus_positive
-                  (i32.const 0) (i32.const 36)))))
+               (@string "float.ml: modulus should be positive"))))
       (local.set $m (call $fmod
          (local.get $a)
          (local.get $b)))
@@ -205,6 +213,8 @@
          (then (local.get $x))
          (else (local.get $y))))
 
+(@if use-js-string
+(@then
    (func (export "Base_string_concat_array")
       (param $str_array (ref eq)) (param $sep_ref (ref eq)) (result (ref eq))
       (local $i i32)
@@ -232,7 +242,7 @@
                (local.set $total_len
                   (i32.add
                      (local.get $total_len)
-                     (array.len (local.get $v))))
+                     (call $caml_string_length (local.get $v))))
                (if (i32.lt_s (local.get $i) (i32.sub (local.get $len) (i32.const 1)))
                   (then
                   (local.set $total_len
@@ -253,8 +263,8 @@
                   (ref.cast
                      (ref $string)
                      (array.get $block (local.get $b) (local.get $i))))
-               (local.set $local_len (array.len (local.get $v)))
-               (array.copy $string $string
+               (local.set $local_len (call $caml_string_length (local.get $v)))
+               (call $caml_blit_string
                   (local.get $str)
                   (local.get $offset)
                   (local.get $v)
@@ -263,7 +273,7 @@
                (local.set $offset (i32.add (local.get $offset) (local.get $local_len)))
                (if (i32.lt_s (local.get $i) (i32.sub (local.get $len) (i32.const 1)))
                   (then
-                     (array.copy $string $string
+                     (call $caml_blit_string
                         (local.get $str)
                         (local.get $offset)
                         (local.get $sep)
@@ -273,4 +283,75 @@
                (local.set $i (i32.add (local.get $i) (i32.const 1)))
                (br $loop))))
       (local.get $str))
+)
+(@else
+   (func (export "Base_string_concat_array")
+      (param $str_array (ref eq)) (param $sep_ref (ref eq)) (result (ref eq))
+      (local $i i32)
+      (local $len i32)
+      (local $b (ref $block))
+      (local $v (ref $bytes))
+      (local $sep (ref $bytes))
+      (local $str (ref $bytes))
+      (local $total_len i32)
+      (local $sep_len i32)
+      (local $offset i32)
+      (local $local_len i32)
+      (local.set $sep (ref.cast (ref $bytes) (local.get $sep_ref)))
+      (local.set $sep_len (array.len (local.get $sep)))
+      (local.set $b (ref.cast (ref $block) (local.get $str_array)))
+      (local.set $len (array.len (local.get $b)))
+      (local.set $i (i32.const 1))
+      (local.set $total_len (i32.const 0))
+      (loop $compute_length
+         (if (i32.lt_s (local.get $i) (local.get $len))
+            (then
+               (local.set $v (ref.cast
+                  (ref $bytes)
+                  (array.get $block (local.get $b) (local.get $i))))
+               (local.set $total_len
+                  (i32.add
+                     (local.get $total_len)
+                     (array.len (local.get $v))))
+               (if (i32.lt_s (local.get $i) (i32.sub (local.get $len) (i32.const 1)))
+                  (then
+                  (local.set $total_len
+                     (i32.add
+                        (local.get $total_len)
+                        (local.get $sep_len)))))
+               (local.set $i (i32.add (local.get $i) (i32.const 1)))
+               (br $compute_length))))
+
+      (local.set $offset (i32.const 0))
+      (local.set $local_len (i32.const 0))
+      (local.set $i (i32.const 1))
+      (local.set $str (array.new $bytes (i32.const 0) (local.get $total_len)))
+      (loop $loop
+         (if (i32.lt_s (local.get $i) (local.get $len))
+            (then
+               (local.set $v
+                  (ref.cast
+                     (ref $bytes)
+                     (array.get $block (local.get $b) (local.get $i))))
+               (local.set $local_len (array.len (local.get $v)))
+               (array.copy $bytes $bytes
+                  (local.get $str)
+                  (local.get $offset)
+                  (local.get $v)
+                  (i32.const 0)
+                  (local.get $local_len))
+               (local.set $offset (i32.add (local.get $offset) (local.get $local_len)))
+               (if (i32.lt_s (local.get $i) (i32.sub (local.get $len) (i32.const 1)))
+                  (then
+                     (array.copy $bytes $bytes
+                        (local.get $str)
+                        (local.get $offset)
+                        (local.get $sep)
+                        (i32.const 0)
+                        (local.get $sep_len))
+                     (local.set $offset (i32.add (local.get $offset) (local.get $sep_len)))))
+               (local.set $i (i32.add (local.get $i) (i32.const 1)))
+               (br $loop))))
+      (local.get $str))
+))
 )
