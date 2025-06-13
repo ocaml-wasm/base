@@ -229,7 +229,7 @@
       (local $offset i32)
       (local $local_len i32)
       (local.set $sep (ref.cast (ref $string) (local.get $sep_ref)))
-      (local.set $sep_len (array.len (local.get $sep)))
+      (local.set $sep_len (call $caml_string_length (local.get $sep)))
       (local.set $b (ref.cast (ref $block) (local.get $str_array)))
       (local.set $len (array.len (local.get $b)))
       (local.set $i (i32.const 1))
