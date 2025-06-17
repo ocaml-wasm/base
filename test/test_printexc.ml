@@ -15,5 +15,5 @@ exception My_invalid_argument of string [@@deriving sexp]
 
 let%expect_test "Printexc: an exception with deriving sexp" =
   print_endline (Printexc.to_string (My_invalid_argument "bad"));
-  [%expect {| (test_printexc.ml.My_invalid_argument bad) |}]
+  [%expect {| (lib/base/test/test_printexc.ml.My_invalid_argument bad) |}]
 ;;
