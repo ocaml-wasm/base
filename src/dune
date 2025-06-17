@@ -39,7 +39,7 @@
 
 (ocamllex hex_lexer)
 
-(documentation)
+(documentation (package base))
 
 (rule
  (targets ocamlopt-flags)
