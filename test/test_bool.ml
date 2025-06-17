@@ -81,19 +81,19 @@ let%expect_test "[Bool.select]" =
 
 let%expect_test "[Bool.select] with [or_null] values" =
   print_s [%sexp (Bool.select true (This 1) Null : int or_null)];
-  [%expect {| (1) |}];
+  [%expect {| (This 1) |}];
   print_s [%sexp (Bool.select false (This 1) Null : int or_null)];
-  [%expect {| () |}];
+  [%expect {| Null |}];
   print_s [%sexp (Bool.select true Null (This 2) : int or_null)];
-  [%expect {| () |}];
+  [%expect {| Null |}];
   print_s [%sexp (Bool.select false Null (This 2) : int or_null)];
-  [%expect {| (2) |}];
+  [%expect {| (This 2) |}];
   print_s [%sexp (Bool.select true (This 1) (This 2) : int or_null)];
-  [%expect {| (1) |}];
+  [%expect {| (This 1) |}];
   print_s [%sexp (Bool.select false (This 1) (This 2) : int or_null)];
-  [%expect {| (2) |}];
+  [%expect {| (This 2) |}];
   print_s [%sexp (Bool.select true Null Null : int or_null)];
-  [%expect {| () |}];
+  [%expect {| Null |}];
   print_s [%sexp (Bool.select false Null Null : int or_null)];
-  [%expect {| () |}]
+  [%expect {| Null |}]
 ;;

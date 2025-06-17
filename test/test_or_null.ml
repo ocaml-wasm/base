@@ -8,17 +8,20 @@ end
 module _ : module type of struct
   include Or_null
 end = struct
-  type 'a t = 'a or_null [@@or_null_reexport] [@@deriving sexp ~localize]
+  type 'a t = 'a or_null =
+    | Null
+    | This of 'a
+  [@@deriving sexp ~localize]
 
   let globalize = globalize_or_null
 
   let%expect_test "globalize" =
     let t = Null in
     print_s [%sexp ([%globalize: int t] t : int t)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     let t' = This "hello world" in
     print_s [%sexp ([%globalize: string t] t' : string t)];
-    [%expect {| ("hello world") |}]
+    [%expect {| (This "hello world") |}]
   ;;
 
   let%template[@mode m = (global, local)] compare = (Or_null.compare [@mode m])
@@ -29,30 +32,30 @@ end = struct
       print_s [%message (t1 : int t) (t2 : int t) (result : int)]
     in
     test Null Null;
-    [%expect {| ((t1 ()) (t2 ()) (result 0)) |}];
+    [%expect {| ((t1 Null) (t2 Null) (result 0)) |}];
     test Null (This 42);
-    [%expect {| ((t1 ()) (t2 (42)) (result -1)) |}];
+    [%expect {| ((t1 Null) (t2 (This 42)) (result -1)) |}];
     test (This 42) Null;
-    [%expect {| ((t1 (42)) (t2 ()) (result 1)) |}];
+    [%expect {| ((t1 (This 42)) (t2 Null) (result 1)) |}];
     test (This 42) (This 42);
-    [%expect {| ((t1 (42)) (t2 (42)) (result 0)) |}];
+    [%expect {| ((t1 (This 42)) (t2 (This 42)) (result 0)) |}];
     test (This 10) (This 20);
-    [%expect {| ((t1 (10)) (t2 (20)) (result -1)) |}];
+    [%expect {| ((t1 (This 10)) (t2 (This 20)) (result -1)) |}];
     test (This 20) (This 10);
-    [%expect {| ((t1 (20)) (t2 (10)) (result 1)) |}];
+    [%expect {| ((t1 (This 20)) (t2 (This 10)) (result 1)) |}];
     (* Test with [%compare: int t] *)
     let test_ppx_compare t1 t2 =
       let result = [%compare: int t] t1 t2 in
       print_s [%message (t1 : int t) (t2 : int t) (result : int)]
     in
     test_ppx_compare Null Null;
-    [%expect {| ((t1 ()) (t2 ()) (result 0)) |}];
+    [%expect {| ((t1 Null) (t2 Null) (result 0)) |}];
     test_ppx_compare Null (This 42);
-    [%expect {| ((t1 ()) (t2 (42)) (result -1)) |}];
+    [%expect {| ((t1 Null) (t2 (This 42)) (result -1)) |}];
     test_ppx_compare (This 42) Null;
-    [%expect {| ((t1 (42)) (t2 ()) (result 1)) |}];
+    [%expect {| ((t1 (This 42)) (t2 Null) (result 1)) |}];
     test_ppx_compare (This 10) (This 20);
-    [%expect {| ((t1 (10)) (t2 (20)) (result -1)) |}]
+    [%expect {| ((t1 (This 10)) (t2 (This 20)) (result -1)) |}]
   ;;
 
   let%template[@mode m = (global, local)] equal = (Or_null.equal [@mode m])
@@ -63,28 +66,28 @@ end = struct
       print_s [%message (t1 : int t) (t2 : int t) (result : bool)]
     in
     test Null Null;
-    [%expect {| ((t1 ()) (t2 ()) (result true)) |}];
+    [%expect {| ((t1 Null) (t2 Null) (result true)) |}];
     test Null (This 42);
-    [%expect {| ((t1 ()) (t2 (42)) (result false)) |}];
+    [%expect {| ((t1 Null) (t2 (This 42)) (result false)) |}];
     test (This 42) Null;
-    [%expect {| ((t1 (42)) (t2 ()) (result false)) |}];
+    [%expect {| ((t1 (This 42)) (t2 Null) (result false)) |}];
     test (This 42) (This 42);
-    [%expect {| ((t1 (42)) (t2 (42)) (result true)) |}];
+    [%expect {| ((t1 (This 42)) (t2 (This 42)) (result true)) |}];
     test (This 10) (This 20);
-    [%expect {| ((t1 (10)) (t2 (20)) (result false)) |}];
+    [%expect {| ((t1 (This 10)) (t2 (This 20)) (result false)) |}];
     (* Test with [%equal: int t] *)
     let test_ppx_equal t1 t2 =
       let result = [%equal: int t] t1 t2 in
       print_s [%message (t1 : int t) (t2 : int t) (result : bool)]
     in
     test_ppx_equal Null Null;
-    [%expect {| ((t1 ()) (t2 ()) (result true)) |}];
+    [%expect {| ((t1 Null) (t2 Null) (result true)) |}];
     test_ppx_equal Null (This 42);
-    [%expect {| ((t1 ()) (t2 (42)) (result false)) |}];
+    [%expect {| ((t1 Null) (t2 (This 42)) (result false)) |}];
     test_ppx_equal (This 42) (This 42);
-    [%expect {| ((t1 (42)) (t2 (42)) (result true)) |}];
+    [%expect {| ((t1 (This 42)) (t2 (This 42)) (result true)) |}];
     test_ppx_equal (This 10) (This 20);
-    [%expect {| ((t1 (10)) (t2 (20)) (result false)) |}]
+    [%expect {| ((t1 (This 10)) (t2 (This 20)) (result false)) |}]
   ;;
 
   let is_null = Or_null.is_null
@@ -134,9 +137,9 @@ end = struct
 
   let%expect_test "of_option" =
     print_s [%sexp (of_option None : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (of_option (Some 42) : int or_null)];
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%template[@mode m = (global, local)] value = (Or_null.value [@mode m])
@@ -207,29 +210,29 @@ end = struct
 
   let%expect_test "this" =
     print_s [%sexp (this 42 : int or_null)];
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%template[@mode m = (global, local)] both = (Or_null.both [@mode m])
 
   let%expect_test "both" =
     print_s [%sexp (both Null Null : (int * int) or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (both (This 1) Null : (int * int) or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (both Null (This 2) : (int * int) or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (both (This 1) (This 2) : (int * int) or_null)];
-    [%expect {| ((1 2)) |}]
+    [%expect {| (This (1 2)) |}]
   ;;
 
   let%template[@mode m = (global, local)] this_if = (Or_null.this_if [@mode m])
 
   let%expect_test "this_if" =
     print_s [%sexp (this_if true 42 : int or_null)];
-    [%expect {| (42) |}];
+    [%expect {| (This 42) |}];
     print_s [%sexp (this_if false 42 : int or_null)];
-    [%expect {| () |}]
+    [%expect {| Null |}]
   ;;
 
   let%template[@mode m = (global, local)] this_if_thunk =
@@ -240,7 +243,7 @@ end = struct
     (* In the [false] case, don't run the thunk *)
     print_s
       [%sexp (this_if_thunk false (fun () -> failwith "should not be run") : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     (* In the [true] case, do run the thunk *)
     print_s
       [%sexp
@@ -251,7 +254,7 @@ end = struct
     [%expect
       {|
       running
-      (42)
+      (This 42)
       |}]
   ;;
 
@@ -277,13 +280,13 @@ end = struct
 
   let%expect_test "first_this" =
     print_s [%sexp (first_this Null Null : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (first_this (This 1) (This 2) : int or_null)];
-    [%expect {| (1) |}];
+    [%expect {| (This 1) |}];
     print_s [%sexp (first_this Null (This 2) : int or_null)];
-    [%expect {| (2) |}];
+    [%expect {| (This 2) |}];
     print_s [%sexp (first_this (This 1) Null : int or_null)];
-    [%expect {| (1) |}]
+    [%expect {| (This 1) |}]
   ;;
 
   let%template[@mode m = (global, local)] first_this_thunk =
@@ -292,13 +295,13 @@ end = struct
 
   let%expect_test "first_this_thunk" =
     print_s [%sexp (first_this_thunk Null (fun () -> Null) : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s
       [%sexp
         (first_this_thunk (This 1) (fun () -> failwith "should not be run") : int or_null)];
-    [%expect {| (1) |}];
+    [%expect {| (This 1) |}];
     print_s [%sexp (first_this_thunk Null (fun () -> This 2) : int or_null)];
-    [%expect {| (2) |}]
+    [%expect {| (This 2) |}]
   ;;
 
   let%template[@mode m = (global, local)] map = (Or_null.map [@mode m])
@@ -306,9 +309,9 @@ end = struct
   let%expect_test "map" =
     let double x = x * 2 in
     print_s [%sexp (map Null ~f:double : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (map (This 21) ~f:double : int or_null)];
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%template[@mode m = (global, local)] bind = (Or_null.bind [@mode m])
@@ -316,11 +319,11 @@ end = struct
   let%expect_test "bind" =
     let maybe_double x = if x > 0 then This (x * 2) else Null in
     print_s [%sexp (bind Null ~f:maybe_double : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (bind (This 21) ~f:maybe_double : int or_null)];
-    [%expect {| (42) |}];
+    [%expect {| (This 42) |}];
     print_s [%sexp (bind (This (-1)) ~f:maybe_double : int or_null)];
-    [%expect {| () |}]
+    [%expect {| Null |}]
   ;;
 
   let%template[@mode m = (global, local), n = (global, local)] fold =
@@ -382,20 +385,20 @@ end = struct
   let%expect_test "find" =
     let is_even x = x % 2 = 0 in
     print_s [%sexp (find Null ~f:is_even : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (find (This 1) ~f:is_even : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (find (This 2) ~f:is_even : int or_null)];
-    [%expect {| (2) |}]
+    [%expect {| (This 2) |}]
   ;;
 
   let%template[@mode m = (global, local)] try_with = (Or_null.try_with [@mode m])
 
   let%expect_test "try_with" =
     print_s [%sexp (try_with (fun () -> 42) : int or_null)];
-    [%expect {| (42) |}];
+    [%expect {| (This 42) |}];
     print_s [%sexp (try_with (fun () -> failwith "error") : int or_null)];
-    [%expect {| () |}]
+    [%expect {| Null |}]
   ;;
 
   let%template[@mode m = (global, local)] try_with_join =
@@ -404,11 +407,11 @@ end = struct
 
   let%expect_test "try_with_join" =
     print_s [%sexp (try_with_join (fun () -> This 42) : int or_null)];
-    [%expect {| (42) |}];
+    [%expect {| (This 42) |}];
     print_s [%sexp (try_with_join (fun () -> Null) : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (try_with_join (fun () -> failwith "error") : int or_null)];
-    [%expect {| () |}]
+    [%expect {| Null |}]
   ;;
 
   let%template[@mode m = (global, local)] merge = (Or_null.merge [@mode m])
@@ -416,13 +419,13 @@ end = struct
   let%expect_test "merge" =
     let f = ( + ) in
     print_s [%sexp (merge Null Null ~f : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (merge (This 3) Null ~f : int or_null)];
-    [%expect {| (3) |}];
+    [%expect {| (This 3) |}];
     print_s [%sexp (merge Null (This 3) ~f : int or_null)];
-    [%expect {| (3) |}];
+    [%expect {| (This 3) |}];
     print_s [%sexp (merge (This 1) (This 3) ~f : int or_null)];
-    [%expect {| (4) |}]
+    [%expect {| (This 4) |}]
   ;;
 
   module Let_syntax = Or_null.Let_syntax
@@ -430,20 +433,20 @@ end = struct
   let%expect_test "Let_syntax return" =
     let open Let_syntax in
     print_s [%sexp (return 42 : int or_null)];
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%expect_test "Let_syntax bind and map operators" =
     let open Let_syntax in
     let double x = This (x * 2) in
     print_s [%sexp (Null >>= double : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (This 21 >>= double : int or_null)];
-    [%expect {| (42) |}];
+    [%expect {| (This 42) |}];
     print_s [%sexp (Null >>| Int.succ : int or_null)];
-    [%expect {| () |}];
+    [%expect {| Null |}];
     print_s [%sexp (This 41 >>| Int.succ : int or_null)];
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%expect_test "let%bind syntax" =
@@ -456,11 +459,11 @@ end = struct
       print_s [%sexp (res : int or_null)]
     in
     test_bind Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_bind (This 5);
-    [%expect {| (10) |}];
+    [%expect {| (This 10) |}];
     test_bind (This (-3));
-    [%expect {| () |}]
+    [%expect {| Null |}]
   ;;
 
   let%expect_test "let%map syntax" =
@@ -472,9 +475,9 @@ end = struct
       print_s [%sexp (res : int or_null)]
     in
     test_map Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_map (This 21);
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%expect_test "let%map with multiple bindings" =
@@ -487,13 +490,13 @@ end = struct
       print_s [%sexp (res : int or_null)]
     in
     test_map Null Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_map (This 10) Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_map Null (This 20);
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_map (This 10) (This 20);
-    [%expect {| (30) |}]
+    [%expect {| (This 30) |}]
   ;;
 
   let%expect_test "nested let%bind and let%map" =
@@ -506,13 +509,13 @@ end = struct
       print_s [%sexp (res : int or_null)]
     in
     test_nested Null Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_nested (This 6) Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_nested Null (This 7);
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_nested (This 6) (This 7);
-    [%expect {| (42) |}]
+    [%expect {| (This 42) |}]
   ;;
 
   let%expect_test "complex nested ppx_let syntax" =
@@ -527,10 +530,10 @@ end = struct
       print_s [%sexp (res : int or_null)]
     in
     test_complex Null;
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_complex (This 5);
-    [%expect {| () |}];
+    [%expect {| Null |}];
     test_complex (This 10);
-    [%expect {| (21) |}]
+    [%expect {| (This 21) |}]
   ;;
 end

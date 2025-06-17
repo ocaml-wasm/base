@@ -50,11 +50,11 @@ module%test _ : module type of Avltree = struct
           |> Base_quickcheck.Generator.map ~f:Int64.of_int
         ;;
 
-        let box = Int64_u.to_int64
-        let unbox = Int64_u.of_int64
-        let compare_unboxed = Int64_u.compare
+        let box = Int64.to_int64
+        let unbox = Int64.of_int64
+        let compare_unboxed = Int64.compare
         let map = neg
-        let map_unboxed = Int64_u.neg
+        let map_unboxed = Int64.neg
       end
 
       module Float :
@@ -66,11 +66,11 @@ module%test _ : module type of Avltree = struct
 
         [%%rederive type t = float [@@deriving quickcheck]]
 
-        let box = Float_u.to_float
-        let unbox = Float_u.of_float
-        let compare_unboxed = Float_u.compare
+        let box = Float.to_float
+        let unbox = Float.of_float
+        let compare_unboxed = Float.compare
         let map = neg
-        let map_unboxed = Float_u.neg
+        let map_unboxed = Float.neg
       end
 
       module String :

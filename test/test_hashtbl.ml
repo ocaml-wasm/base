@@ -67,8 +67,8 @@ let%expect_test "[choose], [choose_exn], [choose_randomly], [choose_randomly_exn
              : (_ * _) option)
           ~choose_local_exn:
             (Or_error.try_with (fun () ->
-               [%globalize: int Modes.Global.t * int Modes.Global.t]
-                 [%template (Hashtbl.choose_exn [@mode local]) t] [@nontail])
+               ([%globalize: int Modes.Global.t * int Modes.Global.t]
+                  [%template (Hashtbl.choose_exn [@mode local]) t] [@nontail]))
              : (_ * _) Or_error.t)
           ~choose_randomly:(Hashtbl.choose_randomly t : (_ * _) option)
           ~choose_randomly_exn:
@@ -170,7 +170,7 @@ let%expect_test "smoke tests for templated versions" =
     type t = string option [@@deriving compare, equal, sexp]
   end
   in
-  let t = (Hashtbl.create [@kind float64 value]) (module Float_u) in
+  let t = (Hashtbl.create [@kind float64 value]) (module Float) in
   (Hashtbl.set [@kind float64 value]) t ~key:1.0 ~data:"foo";
   require ((Hashtbl.mem [@kind float64 value]) t 1.0);
   require (not @@ (Hashtbl.mem [@kind float64 value]) t 2.0);
@@ -180,7 +180,7 @@ let%expect_test "smoke tests for templated versions" =
   require_does_raise (fun () ->
     (Hashtbl.add_exn [@kind float64 value]) t ~key:0.0 ~data:"zero");
   [%expect {| ("Hashtbl.add_exn got key already present" 0) |}];
-  print_s [%sexp (t : ((Float_u.t, string) Hashtbl.t[@kind float64 value]))];
+  print_s [%sexp (t : ((Float.t, string) Hashtbl.t[@kind float64 value]))];
   [%expect
     {|
     ((0 zero)
