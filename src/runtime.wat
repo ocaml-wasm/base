@@ -29,6 +29,12 @@
    (import "env" "caml_string_cat"
       (func $caml_string_cat
          (param (ref eq)) (param (ref eq)) (result (ref eq))))
+   (import "env" "caml_bytes_of_string"
+      (func $caml_bytes_of_string
+         (param (ref eq)) (result (ref eq))))
+   (import "env" "caml_string_of_bytes"
+      (func $caml_string_of_bytes
+         (param (ref eq)) (result (ref eq))))
 
 (@if use-js-string
 (@then
@@ -223,7 +229,7 @@
       (local $b (ref $block))
       (local $v (ref $string))
       (local $sep (ref $string))
-      (local $str (ref $string))
+      (local $str (ref $bytes))
       (local $total_len i32)
       (local $sep_len i32)
       (local $offset i32)
@@ -256,7 +262,7 @@
       (local.set $offset (i32.const 0))
       (local.set $local_len (i32.const 0))
       (local.set $i (i32.const 1))
-      (local.set $str (array.new $string (i32.const 0) (local.get $total_len)))
+      (local.set $str (array.new $bytes (i32.const 0) (local.get $total_len)))
       (loop $loop
          (if (i32.lt_s (local.get $i) (local.get $len))
             (then
@@ -265,25 +271,25 @@
                      (ref $string)
                      (array.get $block (local.get $b) (local.get $i))))
                (local.set $local_len (call $caml_string_length (local.get $v)))
-               (call $caml_blit_string
+               (array.copy $bytes $bytes
                   (local.get $str)
                   (local.get $offset)
-                  (local.get $v)
+                  (ref.cast (ref $bytes) (call $caml_bytes_of_string (local.get $v)))
                   (i32.const 0)
                   (local.get $local_len))
                (local.set $offset (i32.add (local.get $offset) (local.get $local_len)))
                (if (i32.lt_s (local.get $i) (i32.sub (local.get $len) (i32.const 1)))
                   (then
-                     (call $caml_blit_string
+                     (array.copy $bytes $bytes
                         (local.get $str)
                         (local.get $offset)
-                        (local.get $sep)
+                        (ref.cast (ref $bytes) (call $caml_bytes_of_string (local.get $sep)))
                         (i32.const 0)
                         (local.get $sep_len))
                      (local.set $offset (i32.add (local.get $offset) (local.get $sep_len)))))
                (local.set $i (i32.add (local.get $i) (i32.const 1)))
                (br $loop))))
-      (local.get $str))
+      (call $caml_string_of_bytes (local.get $str)))
 )
 (@else
    (func (export "Base_string_concat_array")
