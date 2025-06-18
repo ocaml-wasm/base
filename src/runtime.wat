@@ -16,8 +16,15 @@
          (param (ref eq)) (param (ref eq)) (result (ref eq))))
    (import "env" "Double_val"
       (func $Double_val (param (ref eq)) (result f64)))
+(@if use-js-string
+(@then
    (import "env" "caml_hash_mix_string"
       (func $caml_hash_mix_string (param i32 (ref $string)) (result i32)))
+)
+(@else
+   (import "env" "caml_hash_mix_string"
+      (func $caml_hash_mix_string (param i32 (ref $bytes)) (result i32)))
+))
    (import "env" "caml_hash_mix_final"
       (func $caml_hash_mix_final (param i32) (result i32)))
    (import "env" "caml_hash_mix_double"
