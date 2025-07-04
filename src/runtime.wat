@@ -22,8 +22,8 @@
       (func $caml_hash_mix_string (param i32 (ref $string)) (result i32)))
 )
 (@else
-   (import "env" "caml_hash_mix_string"
-      (func $caml_hash_mix_string (param i32 (ref $bytes)) (result i32)))
+   (import "env" "caml_hash_mix_bytes"
+      (func $caml_hash_mix_bytes (param i32 (ref $bytes)) (result i32)))
 ))
    (import "env" "caml_hash_mix_final"
       (func $caml_hash_mix_final (param i32) (result i32)))
@@ -152,9 +152,17 @@
 
    (func (export "Base_hash_string") (param $s (ref eq)) (result (ref eq))
       (local $h i32)
+(@if use-js-string
+(@then
       (local.set $h
          (call $caml_hash_mix_string (i32.const 0)
                                      (ref.cast (ref $string) (local.get $s))))
+)
+(@else
+      (local.set $h
+         (call $caml_hash_mix_bytes (i32.const 0)
+                                     (ref.cast (ref $bytes) (local.get $s))))
+))
       (ref.i31
          (i32.and (call $caml_hash_mix_final (local.get $h))
                   (i32.const 0x3FFFFFFF))))
